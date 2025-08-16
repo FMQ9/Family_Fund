@@ -1,19 +1,1537 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>My static Space</title>
-		<link rel="stylesheet" href="style.css" />
-	</head>
-	<body>
-		<div class="card">
-			<h1>Welcome to your static Space!</h1>
-			<p>You can modify this app directly by editing <i>index.html</i> in the Files and versions tab.</p>
-			<p>
-				Also don't forget to check the
-				<a href="https://huggingface.co/docs/hub/spaces" target="_blank">Spaces documentation</a>.
-			</p>
-		</div>
-	</body>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صندوق العائلة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .rtl-input {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .toast {
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+        
+        /* Custom scrollbar for RTL */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 hidden">
+        <div class="toast bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg"></div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">تسجيل الدخول / تسجيل حساب جديد</h3>
+                <button id="closeAuthModal" class="absolute left-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <div class="flex border-b">
+                    <button id="loginTab" class="px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600">تسجيل الدخول</button>
+                    <button id="registerTab" class="px-4 py-2 font-medium text-gray-500">تسجيل جديد</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginForm" class="mt-4">
+                    <div class="mb-4">
+                        <label for="loginName" class="block text-gray-700 mb-2"> الاسم </label>
+                        <input type="namw" id="loginName" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="فهد">
+                    </div>
+                    <div class="mb-4">
+                        <label for="loginPassword" class="block text-gray-700 mb-2">كلمة المرور</label>
+                        <input type="password" id="loginPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                    </div>
+                    <button type="button" id="loginBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                        تسجيل الدخول
+                    </button>
+                    <div class="mt-4 text-center">
+                        <p class="text-gray-600">أو</p>
+                        <button type="button" id="googleLoginBtn" class="mt-2 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition flex items-center justify-center">
+                            <i class="fab fa-google ml-2"></i> تسجيل الدخول عبر جوجل
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="registerForm" class="mt-4 hidden">
+                    <div class="mb-4">
+                        <label for="registerName" class="block text-gray-700 mb-2">الاسم</label>
+                        <input type="text" id="registerName" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="اسمك الكامل">
+                    </div>
+                    <div class="mb-4">
+                        <label for="registerEmail" class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+                        <input type="email" id="registerEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="example@example.com">
+                    </div>
+                    <div class="mb-4">
+                        <label for="registerPassword" class="block text-gray-700 mb-2">كلمة المرور</label>
+                        <input type="password" id="registerPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                    </div>
+                    <div class="mb-4">
+                        <label for="registerConfirmPassword" class="block text-gray-700 mb-2">تأكيد كلمة المرور</label>
+                        <input type="password" id="registerConfirmPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                    </div>
+                    <button type="button" id="registerBtn" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
+                        تسجيل حساب جديد
+                    </button>
+                    <div class="mt-4 text-center">
+                        <p class="text-gray-600">أو</p>
+                        <button type="button" id="googleRegisterBtn" class="mt-2 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition flex items-center justify-center">
+                            <i class="fab fa-google ml-2"></i> التسجيل عبر جوجل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">تغيير كلمة المرور</h3>
+                <button id="closeChangePasswordModal" class="absolute left-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-4">
+                    <label for="currentPassword" class="block text-gray-700 mb-2">كلمة المرور الحالية</label>
+                    <input type="password" id="currentPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                </div>
+                <div class="mb-4">
+                    <label for="newPassword" class="block text-gray-700 mb-2">كلمة المرور الجديدة</label>
+                    <input type="password" id="newPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                </div>
+                <div class="mb-4">
+                    <label for="confirmNewPassword" class="block text-gray-700 mb-2">تأكيد كلمة المرور الجديدة</label>
+                    <input type="password" id="confirmNewPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="********">
+                </div>
+                <button id="changePasswordBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                    تغيير كلمة المرور
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-4 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">تأكيد الحذف</h3>
+                <button id="closeDeleteModal" class="absolute left-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-4">
+                <p class="text-gray-700 mb-4">هل أنت متأكد أنك تريد حذف هذه العملية؟ لا يمكن التراجع عن هذا الإجراء.</p>
+                <div class="flex justify-between">
+                    <button id="confirmDeleteBtn" class="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition">
+                        نعم، احذف
+                    </button>
+                    <button id="cancelDeleteBtn" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section (Landing Page) -->
+    <div id="landingPage" class="min-h-screen bg-gradient-to-r from-blue-500 to-blue-700 flex flex-col items-center justify-center text-white p-4">
+        <div class="text-center max-w-3xl">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">صندوق العائلة</h1>
+            <p class="text-xl md:text-2xl mb-8">نظام إدارة المصروفات والعائدات العائلية بطريقة سهلة وآمنة</p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button id="showLoginBtn" class="bg-white text-blue-600 py-3 px-6 rounded-lg text-lg font-medium hover:bg-gray-100 transition">
+                    تسجيل الدخول
+                </button>
+                <button id="showRegisterBtn" class="bg-blue-800 text-white py-3 px-6 rounded-lg text-lg font-medium hover:bg-blue-900 transition">
+                    تسجيل حساب جديد
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Layout (Hidden by default) -->
+    <div id="appLayout" class="hidden">
+        <!-- Navbar -->
+        <nav class="bg-white shadow-md">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center h-12">
+                    <div class="flex items-center">
+                        <button id="sidebarToggle" class="md:hidden text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <span class="text-xl font-bold text-blue-600 ml-4">صندوق العائلة</span>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-4 space-x-reverse">
+                        <a href="#" id="dashboardLink" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-bold">لوحة المعلومات</a>
+                        <a href="#" id="transactionsLink" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-bold">عرض البيانات</a>
+                        
+                        <a href="#" id="addTransactionLink" 
+                        
+                        class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-bold">إدخال البيانات</a>
+                        
+                    </div>
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center text-gray-700 hover:text-blue-600">
+                                <span id="userName" class="hidden md:inline ml-2">المستخدم</span>
+                                <i class="fas fa-user-circle text-xl"></i>
+                            </button>
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="#" id="accountLink" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الحساب</a>
+                                <a href="#" id="changePasswordLink" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">تغيير كلمة المرور</a>
+                                <a href="#" id="logoutLink" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">تسجيل الخروج</a>
+                                <a href="#" id="manageUsersLink" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">إدارة الأعضاء</a>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar (Mobile) -->
+        <div id="sidebar" class="fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform translate-x-full z-40 transition-transform duration-300 ease-in-out md:hidden">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 md:hidden">
+                <span class="text-xl font-bold text-blue-600">صندوق العائلة</span>
+                <button id="closeSidebar" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" id="mobileDashboardLink" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-tachometer-alt ml-2"></i>
+                            <span>لوحة المعلومات</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="mobileTransactionsLink" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-table ml-2"></i>
+                            <span>عرض البيانات</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="mobileAddTransactionLink" 
+                          
+                          class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-plus-circle ml-2"></i>
+                            <span>إدخال البيانات</span>
+                        </a>
+                        
+                    </li>
+                    <li class="border-t border-gray-200 pt-2">
+                        <a href="#" id="mobileAccountLink" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-user ml-2"></i>
+                            <span>الحساب</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="mobileChangePasswordLink" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-key ml-2"></i>
+                            <span>تغيير كلمة المرور</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="mobileLogoutLink" class="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-sign-out-alt ml-2"></i>
+                            <span>تسجيل الخروج</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-6">
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="hidden">
+                <h2 class="text-2xl font-bold mb-6">لوحة المعلومات</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-6">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                <i class="fas fa-money-bill-wave text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">إجمالي الإيداعات</p>
+                                <h3 id="totalDeposits" class="text-2xl font-bold text-green-600">0.00 ر.س</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-6">
+                            <div class="p-3 rounded-full bg-red-100 text-red-600 mr-2">
+                                <i class="fas fa-shopping-cart text-x1"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">إجمالي المصروفات</p>
+                                <h3 id="totalWithdrawals" class="text-2xl font-bold text-red-600">0.00 ر.س</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-6">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                <i class="fas fa-wallet text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">الرصيد الحالي</p>
+                                <h3 id="currentBalance" class="text-2xl font-bold text-blue-600">0.00 ر.س</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-6">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                <i class="fas fa-plus-circle text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">عدد عمليات الإيداع</p>
+                                <h3 id="depositCount" class="text-2xl font-bold text-green-600">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center gap-6">
+                            <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                                <i class="fas fa-minus-circle text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">عدد عمليات السحب</p>
+                                <h3 id="withdrawalCount" class="text-2xl font-bold text-red-600">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">آخر العمليات</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactions" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد عمليات مسجلة</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transactions Page -->
+            <div id="transactionsPage" class="hidden">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <h2 class="text-2xl font-bold mb-4 md:mb-0">عرض البيانات</h2>
+                    
+                    <button id="addTransactionBtn" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-plus ml-2"></i> إدخال عملية جديدة
+                    </button>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label for="searchInput" class="block text-gray-700 mb-2">بحث</label>
+                            <input type="text" id="searchInput" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="ابحث في العمليات...">
+                        </div>
+                        <div>
+                            <label for="typeFilter" class="block text-gray-700 mb-2">نوع العملية</label>
+                            <select id="typeFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input">
+                                <option value="all">الكل</option>
+                                <option value="إيداع">إيداع</option>
+                                <option value="سحب">سحب</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="monthFilter" class="block text-gray-700 mb-2">الشهر</label>
+                            <select id="monthFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input">
+                                <option value="all">كل الشهور</option>
+                                <option value="1">يناير</option>
+                                <option value="2">فبراير</option>
+                                <option value="3">مارس</option>
+                                <option value="4">أبريل</option>
+                                <option value="5">مايو</option>
+                                <option value="6">يونيو</option>
+                                <option value="7">يوليو</option>
+                                <option value="8">أغسطس</option>
+                                <option value="9">سبتمبر</option>
+                                <option value="10">أكتوبر</option>
+                                <option value="11">نوفمبر</option>
+                                <option value="12">ديسمبر</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="yearFilter" class="block text-gray-700 mb-2">السنة</label>
+                            <select id="yearFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input">
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025" selected>2025</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-gray-600">
+                            عرض <span id="rowsPerPage">25</span> صف لكل صفحة
+                        </div>
+                        <div class="flex items-center">
+                            <button id="prevPageBtn" class="px-3 py-1 border border-gray-300 rounded-md mr-2 disabled:opacity-50" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <span id="currentPage" class="mx-2">1</span>
+                            <button id="nextPageBtn" class="px-3 py-1 border border-gray-300 rounded-md ml-2 disabled:opacity-50" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم العضو</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable" class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">لا توجد عمليات مسجلة</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Transaction Page -->
+            <div id="addTransactionPage" class="hidden">
+                <h2 class="text-2xl font-bold mb-6">إدخال بيانات جديدة</h2>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <form id="transactionForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="transactionAmount" class="block text-gray-700 mb-2">المبلغ (ر.س)</label>
+                                <input type="number" id="transactionAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" placeholder="0.00" step="0.01" min="0.01">
+                                <p id="amountError" class="text-red-500 text-sm mt-1 hidden">يجب إدخال مبلغ صحيح أكبر من الصفر</p>
+                            </div>
+                            
+                            <div>
+                                <label for="transactionType" class="block text-gray-700 mb-2">نوع العملية</label>
+                                <select id="transactionType" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input">
+                                    <option value="إيداع">إيداع</option>
+                                    <option value="سحب">سحب</option>
+                                </select>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label for="transactionDescription" class="block text-gray-700 mb-2">وصف العملية (اختياري)</label>
+                                <textarea id="transactionDescription" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input" rows="3" placeholder="وصف مختصر للعملية..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label for="transactionDate" class="block text-gray-700 mb-2">تاريخ العملية</label>
+                                <input type="date" id="transactionDate" class="w-full px-3 py-2 border border-gray-300 rounded-md rtl-input">
+                                <p id="dateError" class="text-red-500 text-sm mt-1 hidden">يجب اختيار تاريخ صحيح</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-end space-x-4 space-x-reverse">
+                            <button type="button" id="resetFormBtn" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition">
+                                مسح الحقول
+                            </button>
+                            <button type="submit" id="submitTransactionBtn" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                                إضافة العملية
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Account Page -->
+            <div id="accountPage" class="hidden">
+                <h2 class="text-2xl font-bold mb-6">الحساب</h2>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-blue-100 text-blue-600 p-4 rounded-full mr-4">
+                            <i class="fas fa-user-circle text-3xl"></i>
+                        </div>
+                        <div>
+                            <h3 id="accountUserName" class="text-xl font-bold">اسم المستخدم</h3>
+                            <p id="accountUserEmail" class="text-gray-600">user@example.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="text-lg font-medium mb-4">معلومات الحساب</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <p class="text-gray-500">تاريخ التسجيل</p>
+                                <p id="accountCreatedAt" class="font-medium">01/01/2023</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">طريقة التسجيل</p>
+                                <p id="accountProvider" class="font-medium">البريد الإلكتروني</p>
+                            </div>
+                            <div>
+                              <p class="text-gray-500">الدور</p>
+                              <p id="accountUserRole" class="font-medium">—</p>
+                              </div>
+
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button id="showChangePasswordBtn" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                                تغيير كلمة المرور
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format numbers with Arabic separators
+        function formatNumber(number) {
+            return new Intl.NumberFormat('ar-SA', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(number);
+        }
+
+        // Format currency with SAR symbol
+        function formatCurrency(amount) {
+            return formatNumber(amount) + ' ر.س';
+        }
+
+        // Format date in dd/MM/yyyy format
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        // Parse date from dd/MM/yyyy format
+        function parseDate(dateString) {
+            const [day, month, year] = dateString.split('/');
+            return new Date(year, month - 1, day);
+        }
+
+        // Show toast notification
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const toastContent = toast.querySelector('.toast');
+            
+            toastContent.textContent = message;
+            toastContent.className = `toast ${isSuccess ? 'bg-green-500' : 'bg-red-500'} text-white px-4 py-2 rounded-lg shadow-lg`;
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Mock database for demo purposes
+        const mockDatabase = {
+            users: [
+                {
+                    id: 1,
+                    name: "فهد",
+                    email: "f.m.q.1411@gmail.com",
+                    password_hash: "hashed_password_1234",
+                    provider: "local",
+                    created_at: "2025-01-01T00:00:00",
+                    role: 'admin'
+                },
+
+                {
+                    id: 2,
+                    name: "سعيد",
+                    email: "example1@example1.com",
+                    password_hash: "hashed_password_1234",
+                    provider: "local",
+                    created_at: "2025-01-01T00:00:00",
+                    role: 'editor'
+                },
+
+                {
+                    id: 3,
+                    name: "سلطان",
+                    email: "example2@example2.com",
+                    password_hash: "hashed_password_1234",
+                    provider: "local",
+                    created_at: "2025-01-01T00:00:00",
+                    role: 'editor'
+                },
+
+                {
+                    id: 4,
+                    name: "عبدالرحمن",
+                    email: "example3@example3.com",
+                    password_hash: "hashed_password_1234",
+                    provider: "local",
+                    created_at: "2025-01-01T00:00:00",
+                    role: 'editor'
+                }
+            ],
+            transactions: [
+                {
+                    id: 1,
+                    user_id: 1,
+                    amount: 100.00,
+                    type: "إيداع",
+                    description: "مساهمة شهرية",
+                    date: "2025-08-10",
+                    created_at: "2025-08-10T10:00:00"
+                },
+                {
+                    id: 2,
+                    user_id: 1,
+                    amount: 30.00,
+                    type: "سحب",
+                    description: "مصاريف منزلية",
+                    date: "2025-08-15",
+                    created_at: "2025-08-15T14:30:00"
+                }
+            ]
+        };
+
+        const Roles = { VIEWER: 'viewer', EDITOR: 'editor', ADMIN: 'admin' };
+        const Actions = {
+  VIEW_TRANSACTIONS: 'VIEW_TRANSACTIONS',
+  CREATE_TRANSACTION: 'CREATE_TRANSACTION',
+  DELETE_TRANSACTION: 'DELETE_TRANSACTION',
+  VIEW_DASHBOARD: 'VIEW_DASHBOARD',
+  CHANGE_PASSWORD: 'CHANGE_PASSWORD',
+  MANAGE_USERS: 'MANAGE_USERS'
+};
+
+const Policy = {
+  [Actions.VIEW_DASHBOARD]:     [Roles.VIEWER, Roles.EDITOR, Roles.ADMIN],
+  [Actions.VIEW_TRANSACTIONS]:  [Roles.VIEWER, Roles.EDITOR, Roles.ADMIN],
+  [Actions.CREATE_TRANSACTION]: [Roles.EDITOR, Roles.ADMIN],
+  [Actions.DELETE_TRANSACTION]: [Roles.ADMIN, Roles.EDITOR],
+  [Actions.CHANGE_PASSWORD]:    [Roles.VIEWER, Roles.EDITOR, Roles.ADMIN],
+  [Actions.MANAGE_USERS]:       [Roles.ADMIN]
+};
+
+function can(action) {
+  return currentUser && Policy[action]?.includes(currentUser.role);
+}
+
+
+        // Current user (for demo)
+        let currentUser = null;
+        let currentPage = 1;
+        const rowsPerPage = 25;
+        let transactionToDelete = null;
+
+        // DOM Elements
+        const landingPage = document.getElementById('landingPage');
+        const appLayout = document.getElementById('appLayout');
+        const authModal = document.getElementById('authModal');
+        const closeAuthModal = document.getElementById('closeAuthModal');
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const googleRegisterBtn = document.getElementById('googleRegisterBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const showRegisterBtn = document.getElementById('showRegisterBtn');
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        const closeChangePasswordModal = document.getElementById('closeChangePasswordModal');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const showChangePasswordBtn = document.getElementById('showChangePasswordBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userMenu = document.getElementById('userMenu');
+        const userName = document.getElementById('userName');
+        const logoutLink = document.getElementById('logoutLink');
+        const accountLink = document.getElementById('accountLink');
+        const changePasswordLink = document.getElementById('changePasswordLink');
+        const dashboardLink = document.getElementById('dashboardLink');
+        const transactionsLink = document.getElementById('transactionsLink');
+        const addTransactionLink = document.getElementById('addTransactionLink');
+        const mobileDashboardLink = document.getElementById('mobileDashboardLink');
+        const mobileTransactionsLink = document.getElementById('mobileTransactionsLink');
+        const mobileAddTransactionLink = document.getElementById('mobileAddTransactionLink');
+        const mobileAccountLink = document.getElementById('mobileAccountLink');
+        const mobileChangePasswordLink = document.getElementById('mobileChangePasswordLink');
+        const mobileLogoutLink = document.getElementById('mobileLogoutLink');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const transactionsPage = document.getElementById('transactionsPage');
+        const addTransactionPage = document.getElementById('addTransactionPage');
+        const accountPage = document.getElementById('accountPage');
+        const totalDeposits = document.getElementById('totalDeposits');
+        const totalWithdrawals = document.getElementById('totalWithdrawals');
+        const currentBalance = document.getElementById('currentBalance');
+        const depositCount = document.getElementById('depositCount');
+        const withdrawalCount = document.getElementById('withdrawalCount');
+        const recentTransactions = document.getElementById('recentTransactions');
+        const transactionsTable = document.getElementById('transactionsTable');
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const monthFilter = document.getElementById('monthFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const currentPageSpan = document.getElementById('currentPage');
+        const addTransactionBtn = document.getElementById('addTransactionBtn');
+        const transactionForm = document.getElementById('transactionForm');
+        const transactionAmount = document.getElementById('transactionAmount');
+        const transactionType = document.getElementById('transactionType');
+        const transactionDescription = document.getElementById('transactionDescription');
+        const transactionDate = document.getElementById('transactionDate');
+        const amountError = document.getElementById('amountError');
+        const dateError = document.getElementById('dateError');
+        const resetFormBtn = document.getElementById('resetFormBtn');
+        const submitTransactionBtn = document.getElementById('submitTransactionBtn');
+        const accountUserName = document.getElementById('accountUserName');
+        const accountUserEmail = document.getElementById('accountUserEmail');
+        const accountCreatedAt = document.getElementById('accountCreatedAt');
+        const accountProvider = document.getElementById('accountProvider');
+        const manageUsersLink = document.getElementById('manageUsersLink');
+
+
+        manageUsersLink?.addEventListener('click', (e) => {
+  e.preventDefault(); // stop <a href="#"> navigation (MDN). 
+
+  if (!can(Actions.MANAGE_USERS)) {
+    showToast('لا تملك صلاحية', false);
+    return;
+  }
+
+  // Ask for the target member by *name*
+  const name = window.prompt('أدخل اسم العضو لتغيير الصلاحية:');
+  if (name === null) return; // user canceled prompt (MDN)
+
+  const target = mockDatabase.users.find(
+    u => (u.name || '').trim().toLowerCase() === name.trim().toLowerCase()
+  );
+  if (!target) {
+    showToast('المستخدم غير موجود', false);
+    return;
+  }
+
+  const role = window.prompt('اختر الدور (viewer | editor | admin):', target.role);
+  if (role === null) return; // user canceled
+
+  updateUserRole(target.id, role); // updater does validation & UI refresh
+});
+
+
+
+        // Event Listeners
+        showLoginBtn.addEventListener('click', () => {
+            authModal.classList.remove('hidden');
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            loginTab.classList.add('border-blue-600', 'text-blue-600');
+            loginTab.classList.remove('text-gray-500');
+            registerTab.classList.remove('border-blue-600', 'text-blue-600');
+            registerTab.classList.add('text-gray-500');
+        });
+
+        showRegisterBtn.addEventListener('click', () => {
+            authModal.classList.remove('hidden');
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+            registerTab.classList.add('border-blue-600', 'text-blue-600');
+            registerTab.classList.remove('text-gray-500');
+            loginTab.classList.remove('border-blue-600', 'text-blue-600');
+            loginTab.classList.add('text-gray-500');
+        });
+
+        closeAuthModal.addEventListener('click', () => {
+            authModal.classList.add('hidden');
+        });
+
+        loginTab.addEventListener('click', () => {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            loginTab.classList.add('border-blue-600', 'text-blue-600');
+            loginTab.classList.remove('text-gray-500');
+            registerTab.classList.remove('border-blue-600', 'text-blue-600');
+            registerTab.classList.add('text-gray-500');
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+            registerTab.classList.add('border-blue-600', 'text-blue-600');
+            registerTab.classList.remove('text-gray-500');
+            loginTab.classList.remove('border-blue-600', 'text-blue-600');
+            loginTab.classList.add('text-gray-500');
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const name = document.getElementById('loginName').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!name || !password) {
+                showToast('الرجاء إدخال البريد الإلكتروني وكلمة المرور', false);
+                return;
+            }
+            
+            // Mock login - in a real app, this would be an API call
+            const user = mockDatabase.users.find(u => u.name === name);
+            
+            if (user && user.password_hash === `hashed_password_${password}`) {
+                currentUser = user;
+                authModal.classList.add('hidden');
+                landingPage.classList.add('hidden');
+                appLayout.classList.remove('hidden');
+                showDashboard();
+                updateUserInfo();
+                applyUiPermissions();
+
+                showToast('تم تسجيل الدخول بنجاح');
+            } else {
+                showToast('البريد الإلكتروني أو كلمة المرور غير صحيحة', false);
+            }
+        });
+
+        registerBtn.addEventListener('click', () => {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (!name || !email || !password || !confirmPassword) {
+                showToast('الرجاء تعبئة جميع الحقول', false);
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showToast('كلمتا المرور غير متطابقتين', false);
+                return;
+            }
+            
+            // Mock registration - in a real app, this would be an API call
+            const newUser = {
+                id: mockDatabase.users.length + 1,
+                name,
+                email,
+                password_hash: `hashed_password_${password}`,
+                provider: "local",
+                created_at: new Date().toISOString(),
+                role: 'viewer'
+            };
+            
+            mockDatabase.users.push(newUser);
+            currentUser = newUser;
+            authModal.classList.add('hidden');
+            landingPage.classList.add('hidden');
+            appLayout.classList.remove('hidden');
+            showDashboard();
+            updateUserInfo();
+            applyUiPermissions();
+
+            showToast('تم إنشاء الحساب بنجاح');
+        });
+
+        
+        googleLoginBtn.addEventListener('click', () => {
+            // Mock Google login
+            const googleUser = {
+                id: 2,
+                name: "فهد",
+                email: "f.m.q.1411@gmail.com",
+                provider: "google",
+                created_at: new Date().toISOString(),
+                role: 'admin' // or 'viewer'
+            };
+            
+            // Check if user exists
+            let user = mockDatabase.users.find(u => u.name === googleUser.name);
+            
+            if (!user) {
+                // Add new user
+                mockDatabase.users.push(googleUser);
+                user = googleUser;
+            }
+            
+            currentUser = user;
+            authModal.classList.add('hidden');
+            landingPage.classList.add('hidden');
+            appLayout.classList.remove('hidden');
+            showDashboard();
+            updateUserInfo();
+            applyUiPermissions();
+
+            showToast('تم تسجيل الدخول عبر جوجل بنجاح');
+        });
+
+        googleRegisterBtn.addEventListener('click', () => {
+            // Same as Google login for demo purposes
+            googleLoginBtn.click();
+        });
+
+        userMenuBtn.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentUser = null;
+            appLayout.classList.add('hidden');
+            landingPage.classList.remove('hidden');
+            showToast('تم تسجيل الخروج بنجاح');
+        });
+
+        mobileLogoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutLink.click();
+            sidebar.classList.add('translate-x-full');
+        });
+
+        accountLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAccount();
+            userMenu.classList.add('hidden');
+        });
+
+        mobileAccountLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAccount();
+            sidebar.classList.add('translate-x-full');
+        });
+
+        changePasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            changePasswordModal.classList.remove('hidden');
+            userMenu.classList.add('hidden');
+        });
+
+        mobileChangePasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            changePasswordModal.classList.remove('hidden');
+            sidebar.classList.add('translate-x-full');
+        });
+
+        closeChangePasswordModal.addEventListener('click', () => {
+            changePasswordModal.classList.add('hidden');
+        });
+
+        changePasswordBtn.addEventListener('click', () => {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+                showToast('الرجاء تعبئة جميع الحقول', false);
+                return;
+            }
+            
+            if (newPassword !== confirmNewPassword) {
+                showToast('كلمتا المرور الجديدة غير متطابقتين', false);
+                return;
+            }
+            
+            if (currentUser.provider === 'google') {
+                showToast('لا يمكن تغيير كلمة المرور لحساب جوجل', false);
+                return;
+            }
+            
+            // Mock password change - in a real app, this would be an API call
+            if (currentUser.password_hash !== `hashed_password_${currentPassword}`) {
+                showToast('كلمة المرور الحالية غير صحيحة', false);
+                return;
+            }
+            
+            currentUser.password_hash = `hashed_password_${newPassword}`;
+            changePasswordModal.classList.add('hidden');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+            showToast('تم تغيير كلمة المرور بنجاح');
+        });
+
+        showChangePasswordBtn.addEventListener('click', () => {
+            changePasswordModal.classList.remove('hidden');
+        });
+
+        dashboardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showDashboard();
+        });
+
+        mobileDashboardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showDashboard();
+            sidebar.classList.add('translate-x-full');
+        });
+
+        transactionsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showTransactions();
+        });
+
+        mobileTransactionsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showTransactions();
+            sidebar.classList.add('translate-x-full');
+        });
+
+        addTransactionLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAddTransaction();
+        });
+
+        mobileAddTransactionLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAddTransaction();
+            sidebar.classList.add('translate-x-full');
+        });
+
+        addTransactionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAddTransaction();
+        });
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.remove('translate-x-full');
+        });
+
+        closeSidebar.addEventListener('click', () => {
+            sidebar.classList.add('translate-x-full');
+        });
+
+        transactionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addTransaction();
+        });
+
+        resetFormBtn.addEventListener('click', () => {
+            transactionForm.reset();
+            amountError.classList.add('hidden');
+            dateError.classList.add('hidden');
+        });
+
+        searchInput.addEventListener('input', () => {
+            currentPage = 1;
+            renderTransactions();
+        });
+
+        typeFilter.addEventListener('change', () => {
+            currentPage = 1;
+            renderTransactions();
+        });
+
+        monthFilter.addEventListener('change', () => {
+            currentPage = 1;
+            renderTransactions();
+        });
+
+        yearFilter.addEventListener('change', () => {
+            currentPage = 1;
+            renderTransactions();
+        });
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTransactions();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredTransactions().length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTransactions();
+            }
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+            }
+            if (e.target === changePasswordModal) {
+                changePasswordModal.classList.add('hidden');
+            }
+            if (e.target === deleteModal) {
+                deleteModal.classList.add('hidden');
+            }
+            if (e.target === sidebar && !sidebar.contains(e.target) && e.target !== sidebarToggle) {
+                sidebar.classList.add('translate-x-full');
+            }
+        });
+
+        // Functions
+        function updateUserInfo() {
+
+          const roleEl = document.getElementById('accountUserRole'); // returns Element or null
+          
+            if (currentUser) {
+                userName.textContent = currentUser.name;
+                accountUserName.textContent = currentUser.name;
+                accountUserEmail.textContent = currentUser.email;
+                accountCreatedAt.textContent = formatDate(currentUser.created_at);
+                accountProvider.textContent = currentUser.provider === 'google' ? 'جوجل' : 'البريد الإلكتروني';
+               if (roleEl) {
+      roleEl.textContent =
+        currentUser.role === 'admin'  ? 'مدير'  :
+        currentUser.role === 'editor' ? 'محرر'  :
+        'قارئ';
+    }
+  } else {
+    // logged out: clear fields gracefully
+    userName.textContent         = '';
+    accountUserName.textContent  = '';
+    accountUserEmail.textContent = '';
+    accountCreatedAt.textContent = '';
+    accountProvider.textContent  = '';
+    if (roleEl) roleEl.textContent = '—';
+  }
+}
+
+            
+            
+        
+
+        function applyUiPermissions() {
+  // Add Transaction (page button + top-nav + mobile-nav)
+  if (!can(Actions.CREATE_TRANSACTION)) {
+    addTransactionBtn?.classList.add('hidden');
+    addTransactionLink?.classList.add('hidden');
+    mobileAddTransactionLink?.classList.add('hidden');
+  } else {
+    addTransactionBtn?.classList.remove('hidden');
+    addTransactionLink?.classList.remove('hidden');
+    mobileAddTransactionLink?.classList.remove('hidden');
+  }
+
+  if (manageUsersLink) {
+    if (!can(Actions.MANAGE_USERS)) {
+      manageUsersLink.classList.add('hidden');
+    } else {
+      manageUsersLink.classList.remove('hidden');
+    }
+  }
+}
+
+function updateUserRole(userId, newRole) {
+  if (!can(Actions.MANAGE_USERS)) { 
+    showToast('لا تملك صلاحية لهذه العملية', false); 
+    return; 
+  }
+
+  const allowed = ['viewer', 'editor', 'admin'];
+  const normalized = String(newRole || '').trim().toLowerCase();
+  if (!allowed.includes(normalized)) {
+    showToast('دور غير صالح', false);
+    return;
+  }
+
+  const u = mockDatabase.users.find(u => u.id === userId);
+  if (!u) { 
+    showToast('المستخدم غير موجود', false); 
+    return; 
+  }
+
+  u.role = normalized;
+
+  // If admin changed their own role, reflect immediately
+  if (currentUser && currentUser.id === userId) {
+    currentUser.role = normalized;
+    updateUserInfo();
+    applyUiPermissions();
+  }
+
+  showToast('تم تحديث دور المستخدم');
+}
+
+
+
+
+        function showDashboard() {
+            dashboardPage.classList.remove('hidden');
+            transactionsPage.classList.add('hidden');
+            addTransactionPage.classList.add('hidden');
+            accountPage.classList.add('hidden');
+            updateDashboard();
+        }
+
+        function showTransactions() {
+            dashboardPage.classList.add('hidden');
+            transactionsPage.classList.remove('hidden');
+            addTransactionPage.classList.add('hidden');
+            accountPage.classList.add('hidden');
+            renderTransactions();
+        }
+
+        function showAddTransaction() {
+            dashboardPage.classList.add('hidden');
+            transactionsPage.classList.add('hidden');
+            addTransactionPage.classList.remove('hidden');
+            accountPage.classList.add('hidden');
+            
+            // Set default date to today
+            const today = new Date();
+            const day = today.getDate().toString().padStart(2, '0');
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const year = today.getFullYear();
+            transactionDate.value = `${year}-${month}-${day}`;
+        }
+
+        function showAccount() {
+            dashboardPage.classList.add('hidden');
+            transactionsPage.classList.add('hidden');
+            addTransactionPage.classList.add('hidden');
+            accountPage.classList.remove('hidden');
+        }
+
+        function updateDashboard() {
+            if (!currentUser) return;
+            
+            const userTransactions = mockDatabase.transactions.filter(t => t.user_id === currentUser.id);
+            
+            const deposits = userTransactions.filter(t => t.type === 'إيداع');
+            const withdrawals = userTransactions.filter(t => t.type === 'سحب');
+            
+            const totalDepositAmount = deposits.reduce((sum, t) => sum + t.amount, 0);
+            const totalWithdrawalAmount = withdrawals.reduce((sum, t) => sum + t.amount, 0);
+            const balance = totalDepositAmount - totalWithdrawalAmount;
+            
+            totalDeposits.textContent = formatCurrency(totalDepositAmount);
+            totalWithdrawals.textContent = formatCurrency(totalWithdrawalAmount);
+            currentBalance.textContent = formatCurrency(balance);
+            depositCount.textContent = deposits.length;
+            withdrawalCount.textContent = withdrawals.length;
+            
+            // Show recent transactions (last 5)
+            const recent = [...userTransactions]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            
+            recentTransactions.innerHTML = '';
+            
+            if (recent.length === 0) {
+                recentTransactions.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">لا توجد عمليات مسجلة</td>
+                    </tr>
+                `;
+            } else {
+                recent.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${formatDate(transaction.date)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap ${transaction.type === 'إيداع' ? 'text-green-600' : 'text-red-600'}">${transaction.type}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(transaction.amount)}</td>
+                        <td class="px-6 py-4">${transaction.description || '-'}</td>
+                    `;
+                    recentTransactions.appendChild(row);
+                });
+            }
+        }
+
+        function filteredTransactions() {
+            if (!currentUser) return [];
+            
+            let transactions = mockDatabase.transactions.filter(t => t.user_id === currentUser.id);
+            
+            // Apply search filter
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                transactions = transactions.filter(t => 
+                    t.type.toLowerCase().includes(searchTerm) ||
+                    t.description?.toLowerCase().includes(searchTerm) ||
+                    currentUser.name.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply type filter
+            const type = typeFilter.value;
+            if (type !== 'all') {
+                transactions = transactions.filter(t => t.type === type);
+            }
+            
+            // Apply month filter
+const m = document.getElementById('monthFilter').value; // "all" or "1".."12"
+const y = document.getElementById('yearFilter').value;  // "all" or "2023".. 
+
+transactions = transactions.filter(t => {
+  const d = new Date(t.date);
+  const byYear  = (y === 'all') || (d.getFullYear() === parseInt(y, 10));
+  const byMonth = (m === 'all') || ((d.getMonth() + 1) === parseInt(m, 10));
+  return byYear && byMonth;
+});
+            
+            
+            return transactions;
+        }
+
+        function renderTransactions() {
+            if (!currentUser) return;
+            
+            const transactions = filteredTransactions();
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const paginatedTransactions = transactions.slice(startIndex, startIndex + rowsPerPage);
+            
+            transactionsTable.innerHTML = '';
+            
+            if (paginatedTransactions.length === 0) {
+                transactionsTable.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">لا توجد عمليات مسجلة</td>
+                    </tr>
+                `;
+            } else {
+                paginatedTransactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    const isOwner = transaction.user_id === currentUser.id;
+const mayDelete = can(Actions.DELETE_TRANSACTION) || (isOwner && currentUser.role !== 'viewer');
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${formatDate(transaction.date)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap ${transaction.type === 'إيداع' ? 'text-green-600' : 'text-red-600'}">${transaction.type}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(transaction.amount)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${currentUser.name}</td>
+                        <td class="px-6 py-4">${transaction.description || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                        
+                            ${mayDelete ? `
+  <button class="delete-btn text-red-600 hover:text-red-800" data-id="${transaction.id}">
+    <i class="fas fa-trash-alt"></i>
+  </button>
+` : ''}
+
+
+                        </td>
+                    `;
+                    transactionsTable.appendChild(row);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                        showDeleteConfirmation(id);
+                    });
+                });
+            }
+            
+            // Update pagination controls
+            const totalPages = Math.ceil(transactions.length / rowsPerPage);
+            currentPageSpan.textContent = currentPage;
+            
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+
+        function showDeleteConfirmation(id) {
+            transactionToDelete = id;
+            deleteModal.classList.remove('hidden');
+        }
+
+        confirmDeleteBtn.addEventListener('click', () => {
+          if (!transactionToDelete) return;
+const idx = mockDatabase.transactions.findIndex(t => t.id === transactionToDelete);
+if (idx === -1) return;
+const t = mockDatabase.transactions[idx];
+const isOwner = t.user_id === currentUser?.id;
+if (!(can(Actions.DELETE_TRANSACTION) || isOwner)) {
+  showToast('لا تملك صلاحية حذف هذه العملية', false);
+  transactionToDelete = null;
+  deleteModal.classList.add('hidden');
+  return;
+}
+
+            if (transactionToDelete) {
+                // Mock delete - in a real app, this would be an API call
+                const index = mockDatabase.transactions.findIndex(t => t.id === transactionToDelete);
+                if (index !== -1) {
+                    mockDatabase.transactions.splice(index, 1);
+                    showToast('تم حذف العملية بنجاح');
+                    renderTransactions();
+                    updateDashboard();
+                }
+                transactionToDelete = null;
+                deleteModal.classList.add('hidden');
+            }
+        });
+
+        cancelDeleteBtn.addEventListener('click', () => {
+            transactionToDelete = null;
+            deleteModal.classList.add('hidden');
+        });
+
+        function addTransaction() {
+          if (!can(Actions.CREATE_TRANSACTION)) {
+  showToast('لا تملك صلاحية إضافة عملية', false);
+  return;
+}
+
+            const amount = parseFloat(transactionAmount.value);
+            const type = transactionType.value;
+            const description = transactionDescription.value;
+            const date = transactionDate.value;
+            
+            // Validate inputs
+            if (isNaN(amount) || amount <= 0) {
+                amountError.classList.remove('hidden');
+                return;
+            } else {
+                amountError.classList.add('hidden');
+            }
+            
+            if (!date) {
+                dateError.classList.remove('hidden');
+                return;
+            } else {
+                dateError.classList.add('hidden');
+            }
+            
+            // Mock add transaction - in a real app, this would be an API call
+            const newTransaction = {
+                id: mockDatabase.transactions.length + 1,
+                user_id: currentUser.id,
+                amount,
+                type,
+                description,
+                date,
+                created_at: new Date().toISOString()
+            };
+            
+            mockDatabase.transactions.push(newTransaction);
+            
+            // Reset form
+            transactionForm.reset();
+            
+            // Show success message and go back to transactions page
+            showToast('تم إضافة العملية بنجاح');
+            showTransactions();
+            updateDashboard();
+        }
+
+        // Initialize date filters
+function initDateFilters() {
+  const yearSelect  = document.getElementById('yearFilter');
+  const monthSelect = document.getElementById('monthFilter');
+
+  // 1) Clear any existing options
+  yearSelect.innerHTML = '';  // MDN: using select.value works on strings; we can rebuild options freely.
+
+  // 2) Add the "ALL years" option at the top and make it selected by default
+  const optAll = document.createElement('option');  // create <option>
+  optAll.value = 'all';                              // value is a string
+  optAll.textContent = 'كل السنوات';                // label shown to users
+  optAll.selected = true;                            // default selected
+  yearSelect.appendChild(optAll);                    // insert into <select>
+
+  // 3) Add the concrete years you want to offer
+  for (let y = 2023; y <= 2027; y++) {
+    const opt = document.createElement('option');
+    opt.value = String(y);                           // keep values as strings
+    opt.textContent = String(y);
+    yearSelect.appendChild(opt);
+  }
+
+  // 4) Default month should be ALL as well
+  monthSelect.value = 'all';                         // assumes an <option value="all">
+}
+            
+
+        // Initialize the app
+        function init() {
+            initDateFilters();
+            
+            // Set today's date as default for new transactions
+            const today = new Date();
+            const day = today.getDate().toString().padStart(2, '0');
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const year = today.getFullYear();
+            transactionDate.value = `${year}-${month}-${day}`;
+            
+            // For demo purposes, show the landing page
+            landingPage.classList.remove('hidden');
+            appLayout.classList.add('hidden');
+        }
+
+        // Start the app
+        init();
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=FMQ9/family-fund" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
