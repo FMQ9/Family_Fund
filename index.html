@@ -1582,6 +1582,11 @@ function initDateFilters() {
         createdAt: serverTimestamp()
       }
     );
+      console.log('Transaction added OK');
+  } catch (e) {
+    console.error('addTransaction failed:', e);
+    alert(`Add failed: ${e.code || e.message}`);
+  }
   };
   // Firestore add/get/real-time docs. :contentReference[oaicite:8]{index=8}
 
