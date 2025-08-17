@@ -1533,5 +1533,83 @@ function initDateFilters() {
         // Start the app
         init();
     </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=FMQ9/family-fund" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=FMQ9/family-fund" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p>
+
+
+  <script type="module">
+  // --- Firebase SDKs (modular) ---
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { 
+    getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut 
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import {
+    getFirestore, collection, addDoc, serverTimestamp,
+    query, orderBy, onSnapshot
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  // 1) Replace with your Firebase config (from Firebase Console)
+  const firebaseConfig = {
+  apiKey: "AIzaSyBE9-i3DMzdGi8zcQAE-nrw-tmzulzOUdk",
+  authDomain: "family-fund-2.firebaseapp.com",
+  projectId: "family-fund-2",
+  storageBucket: "family-fund-2.firebasestorage.app",
+  messagingSenderId: "675718180108",
+  appId: "1:675718180108:web:ec788335ef95b81f45ed29"
+};
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // 2) Simple Google sign-in (or wire Email/Password as needed)
+  const provider = new GoogleAuthProvider(); // docs: Google login flow
+  // Hook to your login button:
+  window.signIn = async () => { await signInWithPopup(auth, provider); };
+  window.signOut = async () => { await signOut(auth); };
+  // Auth docs. :contentReference[oaicite:7]{index=7}
+
+  // 3) Choose a family scope (static or from user profile)
+  const FAMILY_ID = 'default-family'; // you can make this dynamic later
+
+  // 4) Add a transaction (call this from your "إدخال البيانات" form handler)
+  window.addTransaction = async (tx) => {
+    // tx = { type: 'deposit'|'withdrawal', amount: Number, note?: string }
+    if (!auth.currentUser) throw new Error('Must be signed in');
+    await addDoc(
+      collection(db, 'families', FAMILY_ID, 'transactions'),
+      {
+        ...tx,
+        uid: auth.currentUser.uid,
+        createdAt: serverTimestamp()
+      }
+    );
+  };
+  // Firestore add/get/real-time docs. :contentReference[oaicite:8]{index=8}
+
+  // 5) Live list (updates instantly for ALL users)
+  const q = query(
+    collection(db, 'families', FAMILY_ID, 'transactions'),
+    orderBy('createdAt', 'desc')
+  );
+
+  onAuthStateChanged(auth, user => {
+    if (!user) {
+      // clear UI if signed out
+      renderTransactions([]);
+      return;
+    }
+    // Live listener
+    onSnapshot(q, snap => {
+      const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderTransactions(rows); // TODO: update your DOM here
+    });
+  });
+
+  function renderTransactions(rows) {
+    // update totals, counts, and your table/tiles:
+    // totalDeposits, totalWithdrawals, currentBalance, etc.
+  }
+</script>
+  
+
+</body>
 </html>
