@@ -1592,6 +1592,7 @@ function initDateFilters() {
   );
 
   onAuthStateChanged(auth, user => {
+      console.log('AUTH STATE:', user?.uid, user?.email);
     if (!user) {
       // clear UI if signed out
       renderTransactions([]);
